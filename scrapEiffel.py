@@ -3,6 +3,21 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import smtplib #lib pour la partie email
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+SMTP_SERVER =  "smtp.gmail.com" #Serveur email
+SMTP_PORT = 587 #Port du serveur
+GMAIL_USERNAME  = "BotHdws@gmail.com" #Votre adresse  email
+GMAIL_PASSWORD = "zakfmsrmlyzokdaf" #Votre  mot de passe
+receiverAddress = "hidaouse.hedws@gmail.com" #Adresse mail destinataire
+
+emailSubject = "Rapport du bot tour Eiffel" #Objet du email 
+emailBase = "C'est le moment d'acheter :\n\n" #Début du corps du email
+emailContent = "" #Contenu du mail
+emailSignature = "\n Cordialement,\n Le bot" #Signature du mail
+sendEmail = False #Variable de contrôle permettant de savoir s'il faut envoyer l'email
 
 
 options = webdriver.ChromeOptions()
@@ -65,14 +80,46 @@ else:
     ul_schedule = driver.find_element(By.CSS_SELECTOR, "ul.schedule_list")
     li_schedule = ul_schedule.find_elements(By.TAG_NAME, "li")
 
-    if "disabled" in li_schedule[22].get_attribute("class"):
+    if "disabled" in li_schedule[26].get_attribute("class"):
         print("Oui disabled")
+        sendEmail = True
     else:
         print("Non pas disabled")
 
-
 # Attendez 5 secondes
 time.sleep(3)
-
 # Fermez le navigateur
 driver.quit()
+
+
+#Envoi de l'email
+if(sendEmail == True):
+    #Le corps du mail est composé de la phrase de base, des noms des jeux à acheter et de la signature
+    emailBody = emailBase + emailContent + emailSignature
+
+    #Creation de  l'email
+    message = MIMEMultipart()
+    message['From'] = GMAIL_USERNAME
+    message['To'] = receiverAddress
+    message['Subject'] = emailSubject
+    message.attach(MIMEText(emailBody, 'plain'))
+
+    #Connexion  au serveur Gmail
+    session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+    session.ehlo()
+    session.starttls()
+    session.ehlo()
+ 
+    #Authentification
+    session.login(GMAIL_USERNAME, GMAIL_PASSWORD)
+
+    #Envoi de l'email
+    session.sendmail(GMAIL_USERNAME, receiverAddress, message.as_string())
+    session.quit
+    
+    #Le mail vient d'être envoyé, on remet la variable de controle à False
+    sendEmail = False
+
+else:
+    print("rien de nouveau")
+
